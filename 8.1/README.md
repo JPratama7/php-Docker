@@ -6,16 +6,6 @@ This is a Dockerfile/image to build a container for nginx and php-fpm, with the 
 
 If you have improvements or suggestions please open an issue or pull request on the GitHub project page.
 
-### Versioning
-| Docker Tag | Git Release | Nginx Version | PHP Version | Alpine Version |
-|-----|-------|-----|--------|--------|
-| latest/2.1.4 | Master Branch |1.21.6 | 8.1.9 | 3.16 |
-
-For other tags please see: [versioning](https://github.com/richarvey/nginx-php-fpm/blob/master/docs/versioning.md)
-
-__NOTE:__ From 2.0.5 onwards there are x86 and arm64 builds available
-
-
 ## Quick Start
 To pull from docker hub:
 ```
