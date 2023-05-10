@@ -16,11 +16,12 @@ ENV php_conf=/usr/local/etc/php-fpm.conf \
 ARG NGINX_VERSION=1.24.0
 ARG LUA_MODULE_VERSION=0.10.24
 ARG DEVEL_KIT_MODULE_VERSION=0.3.2
-ARG VERSION_PCRE=pcre-8.45
+ARG VERSION_PCRE=8.45
+ARG PCRE_FOLDER=pcre-${VERSION_PCRE}
 ARG VERSION_ZLIB=1.2.13
 ARG VERSION_LUA_RUSTY_CORE=0.1.26
 ARG VERSION_RUSTY_LRU=0.14
-ARG VERSION_LUAJIT=2.1-20230119
+ARG VERSION_LUAJIT=2.1-20230410
 ARG SOURCE_FOLDER="/usr/src"
 
 ARG CONFIG="\
@@ -111,7 +112,7 @@ RUN apk add --no-cache --virtual .openssl-deps openssl libretls \
   && curl -fSL https://github.com/madler/zlib/archive/v$VERSION_ZLIB.tar.gz -o zlib.tar.gz \
   && curl -fSL https://github.com/openresty/lua-resty-core/archive/v$VERSION_LUA_RUSTY_CORE.tar.gz -o rustycore.tar.gz \
   && curl -fSL https://github.com/openresty/lua-resty-lrucache/archive/v$VERSION_RUSTY_LRU.tar.gz -o rustylru.tar.gz \
-  && curl -fSL https://sourceforge.net/projects/pcre/files/pcre/8.45/$VERSION_PCRE.tar.gz/download -o pcre.tar.gz \
+  && curl -fSL https://sourceforge.net/projects/pcre/files/pcre/${VERSION_PCRE}/$PCRE_FOLDER.tar.gz/download -o pcre.tar.gz \
   && curl -fSL https://github.com/openresty/luajit2/archive/v$VERSION_LUAJIT.tar.gz -o luajit.tar.gz \
 #  && curl -fSL https://github.com/leev/ngx_http_geoip2_module/archive/$GEOIP2_MODULE_VERSION.tar.gz -o ngx_http_geoip2_module.tar.gz \
 #  && export GNUPGHOME="$(mktemp -d)" \
