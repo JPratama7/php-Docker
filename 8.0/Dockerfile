@@ -105,14 +105,22 @@ RUN apk add --no-cache --virtual .openssl-deps openssl libretls \
   && mkdir -p /usr/src \
   && cd /usr/src \
   && echo "Downloading......" \
+  && echo "Download nginx" \
   && curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
   && curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
+  && echo "Download nginx devel kit" \
   && curl -fSL https://github.com/simpl/ngx_devel_kit/archive/v$DEVEL_KIT_MODULE_VERSION.tar.gz -o ndk.tar.gz \
+  && echo "Download lua nginx module" \
   && curl -fSL https://github.com/openresty/lua-nginx-module/archive/v$LUA_MODULE_VERSION.tar.gz -o lua.tar.gz \
+  && echo "Download zlib" \
   && curl -fSL https://github.com/madler/zlib/archive/v$VERSION_ZLIB.tar.gz -o zlib.tar.gz \
+  && echo "Download lua resty core" \
   && curl -fSL https://github.com/openresty/lua-resty-core/archive/v$VERSION_LUA_RUSTY_CORE.tar.gz -o rustycore.tar.gz \
+  && echo "Download lua resty lrucache" \
   && curl -fSL https://github.com/openresty/lua-resty-lrucache/archive/v$VERSION_RUSTY_LRU.tar.gz -o rustylru.tar.gz \
+  && echo "Download pcre" \
   && curl -fSL https://sourceforge.net/projects/pcre/files/pcre/${VERSION_PCRE}/$PCRE_FOLDER.tar.gz/download -o pcre.tar.gz \
+  && echo "Download luajit2" \
   && curl -fSL https://github.com/openresty/luajit2/archive/v$VERSION_LUAJIT.tar.gz -o luajit.tar.gz \
 #  && curl -fSL https://github.com/leev/ngx_http_geoip2_module/archive/$GEOIP2_MODULE_VERSION.tar.gz -o ngx_http_geoip2_module.tar.gz \
 #  && export GNUPGHOME="$(mktemp -d)" \
