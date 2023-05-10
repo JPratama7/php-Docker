@@ -2,11 +2,7 @@ name: Image Builder PHP
 
 on:
   push:
-    branches:
-    - php
   workflow_dispatch:
-    branches: 
-    - php
 
 jobs:
   PHP:
