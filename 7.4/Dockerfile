@@ -104,15 +104,15 @@ RUN apk add --no-cache --virtual .openssl-deps openssl libretls tzdata \
   && mkdir -p /usr/src \
   && cd /usr/src \
   && echo "Downloading......" \
-  && curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
-  && curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz.asc  -o nginx.tar.gz.asc \
-  && curl -fSL https://github.com/simpl/ngx_devel_kit/archive/v$DEVEL_KIT_MODULE_VERSION.tar.gz -o ndk.tar.gz \
-  && curl -fSL https://github.com/openresty/lua-nginx-module/archive/v$LUA_MODULE_VERSION.tar.gz -o lua.tar.gz \
-  && curl -fSL https://github.com/madler/zlib/archive/v$VERSION_ZLIB.tar.gz -o zlib.tar.gz \
-  && curl -fSL https://github.com/openresty/lua-resty-core/archive/v$VERSION_LUA_RUSTY_CORE.tar.gz -o rustycore.tar.gz \
-  && curl -fSL https://github.com/openresty/lua-resty-lrucache/archive/v$VERSION_RUSTY_LRU.tar.gz -o rustylru.tar.gz \
-  && curl -fSL https://sourceforge.net/projects/pcre/files/pcre/8.45/$VERSION_PCRE.tar.gz/download -o pcre.tar.gz \
-  && curl -fSL https://github.com/openresty/luajit2/archive/v$VERSION_LUAJIT.tar.gz -o luajit.tar.gz \
+  && curl -fSL http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz -o nginx.tar.gz \
+  && curl -fSL http://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz.asc  -o nginx.tar.gz.asc \
+  && curl -fSL https://github.com/simpl/ngx_devel_kit/archive/v${DEVEL_KIT_MODULE_VERSION}.tar.gz -o ndk.tar.gz \
+  && curl -fSL https://github.com/openresty/lua-nginx-module/archive/v${LUA_MODULE_VERSION}.tar.gz -o lua.tar.gz \
+  && curl -fSL https://github.com/madler/zlib/archive/v${VERSION_ZLIB}.tar.gz -o zlib.tar.gz \
+  && curl -fSL https://github.com/openresty/lua-resty-core/archive/v${VERSION_LUA_RUSTY_CORE}.tar.gz -o rustycore.tar.gz \
+  && curl -fSL https://github.com/openresty/lua-resty-lrucache/archive/v${VERSION_RUSTY_LRU}.tar.gz -o rustylru.tar.gz \
+  && curl -fSL https://sourceforge.net/projects/pcre/files/pcre/8.45/${VERSION_PCRE}.tar.gz/download -o pcre.tar.gz \
+  && curl -fSL https://github.com/openresty/luajit2/archive/v${VERSION_LUAJIT}.tar.gz -o luajit.tar.gz \
 #  && curl -fSL https://github.com/leev/ngx_http_geoip2_module/archive/$GEOIP2_MODULE_VERSION.tar.gz -o ngx_http_geoip2_module.tar.gz \
 #  && export GNUPGHOME="$(mktemp -d)" \
 #  && found=''; \
