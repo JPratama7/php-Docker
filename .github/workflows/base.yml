@@ -47,7 +47,8 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       - name: Build Docker
         run : |
-          docker build -f base/${{ matrix.build }}/Dockerfile -t jpratama7/php-fpm:build-fat .
+          cd base/${{ matrix.build }}/
+          docker build -f Dockerfile -t jpratama7/php-fpm:build-fat .
           docker-squash -v -t jpratama7/php-fpm:${{ matrix.build }}-latest jpratama7/php-fpm:build-fat
           docker push jpratama7/php-fpm:${{ matrix.build }}-latest
           docker-squash -v -t jpratama7/php-fpm:${{ matrix.build }}-${{ steps.date.outputs.date }} jpratama7/php-fpm:build-fat
