@@ -20,7 +20,7 @@ RUN apk add --no-cache --virtual .persistent-deps \
 		tar \
 		xz \
 # https://github.com/docker-library/php/issues/494
-		openssl
+		libressl
 
 # http://git.alpinelinux.org/cgit/aports/tree/main/apache2/apache2.pre-install?h=v3.3.2
 # http://git.alpinelinux.org/cgit/aports/tree/main/lighttpd/lighttpd.pre-install?h=v3.3.2
@@ -91,7 +91,7 @@ RUN set -xe \
 		coreutils \
 		curl-dev \
 		libedit-dev \
-		openssl-dev \
+		libressl-dev \
 		libxml2-dev \
 		sqlite-dev \
 	\
