@@ -39,18 +39,18 @@ ENV PHP_EXTRA_CONFIGURE_ARGS --enable-fpm --with-fpm-user=www-data --with-fpm-gr
 
 # Apply stack smash protection to functions using local buffers and alloca()
 # Make PHP's main executable position-independent (improves ASLR security mechanism, and has no performance impact on x86_64)
-# Enable optimization (-O2)
+# Enable optimization (-O3)
 # Enable linker optimization (this sorts the hash buckets to improve cache locality, and is non-default)
 # Adds GNU HASH segments to generated executables (this is used if present, and is much faster than sysv hash; in this configuration, sysv hash is also generated)
 # https://github.com/docker-library/php/issues/272
-ENV PHP_CFLAGS="-fstack-protector-strong -fpic -fpie -O2"
+ENV PHP_CFLAGS="-fstack-protector-strong -fpic -fpie -O3"
 ENV PHP_CPPFLAGS="$PHP_CFLAGS"
 ENV PHP_LDFLAGS="-Wl,-O1 -Wl,--hash-style=both -pie"
 
 ENV GPG_KEYS 0BD78B5F97500D450838F95DFE857D9A90D90EC1 6E4F6AB321FDC07F2C332E3AC2BF0BC433CFC8B3
 
-ENV PHP_VERSION 5.6.39
-ENV PHP_URL="https://secure.php.net/get/php-5.6.39.tar.xz/from/this/mirror" PHP_ASC_URL="https://secure.php.net/get/php-5.6.39.tar.xz.asc/from/this/mirror"
+ENV PHP_VERSION 5.6.40
+ENV PHP_URL="https://secure.php.net/get/php-5.6.40.tar.xz/from/this/mirror" PHP_ASC_URL="https://secure.php.net/get/php-5.6.40.tar.xz.asc/from/this/mirror"
 ENV PHP_SHA256="8147576001a832ff3d03cb2980caa2d6b584a10624f87ac459fcd3948c6e4a10" PHP_MD5=""
 
 RUN set -xe; \
