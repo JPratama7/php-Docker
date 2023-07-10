@@ -88,6 +88,7 @@ RUN set -xe; \
 COPY docker-php-source /usr/local/bin/
 
 RUN set -xe \
+	&& docker-php-source extract \	
 	&& apk add --no-cache --virtual .build-deps \
 		$PHPIZE_DEPS \
 		coreutils \
@@ -99,7 +100,6 @@ RUN set -xe \
 	&& export CFLAGS="$PHP_CFLAGS" \
 		CPPFLAGS="$PHP_CPPFLAGS" \
 		LDFLAGS="$PHP_LDFLAGS" \
-	&& docker-php-source extract \
 	&& cd /usr/src/php \
 	&& gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
 	&& ./configure \
