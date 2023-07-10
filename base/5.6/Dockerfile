@@ -98,7 +98,7 @@ RUN set -xe \
 	&& export CFLAGS="$PHP_CFLAGS" \
 		CPPFLAGS="$PHP_CPPFLAGS" \
 		LDFLAGS="$PHP_LDFLAGS" \
-	&& docker-php-source extract \
+	&& tar -Jxf /usr/src/php.tar.xz -C "/usr/src/php" --strip-components=1 \
 	&& cd /usr/src/php \
 	&& gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
 	&& ./configure \
