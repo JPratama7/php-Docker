@@ -25,8 +25,7 @@ RUN apk add --no-cache --virtual .persistent-deps \
 		curl \
 		tar \
 		xz \
-# https://github.com/docker-library/php/issues/494
-		libressl
+        openssl-dev
 
 
 ENV PHP_INI_DIR /usr/local/etc/php
@@ -92,7 +91,6 @@ RUN set -xe \
 		coreutils \
 		curl-dev \
 		libedit-dev \
-		libressl-dev \
 		libxml2-dev \
 		sqlite-dev \
 	\
