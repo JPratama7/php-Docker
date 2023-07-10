@@ -25,8 +25,7 @@ RUN apk add --no-cache --virtual .persistent-deps \
 		curl \
 		tar \
 		xz \
-        openssl-dev
-
+        openssl1.1-compat-dev
 
 ENV PHP_INI_DIR /usr/local/etc/php
 RUN mkdir -p $PHP_INI_DIR/conf.d
