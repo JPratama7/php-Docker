@@ -138,7 +138,7 @@ RUN set -xe \
 	&& cp -v php.ini-* "$PHP_INI_DIR/" \
 	\
 	&& cd / \
-	&& docker-php-source delete \
+	&& rm -rf /usr/src/php \
 	\
 	&& runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \

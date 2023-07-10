@@ -14,12 +14,12 @@ ENV php_conf=/usr/local/etc/php-fpm.conf \
     COMPILE_FLAGS="-O3 -pipe -fmodulo-sched -fmodulo-sched-allow-regmoves -flto -fipa-ra -ftree-loop-linear -floop-block -floop-strip-mine -fsplit-paths -floop-unroll-and-jam -fipa-pta -fgcse-lm -fgcse-sm -flive-range-shrinkage -fsched-pressure -fuse-linker-plugin -ffat-lto-objects -ftree-vectorize -fdata-sections -ffunction-sections -mfpmath=sse -fgraphite-identity -ftree-loop-ivcanon -fivopts  -floop-interchange -floop-nest-optimize -floop-parallelize-all -ftree-loop-distribution -fira-hoist-pressure -fira-loop-pressure -ftree-loop-im"
 
 ARG NGINX_VERSION=1.24.0
-ARG LUA_MODULE_VERSION=0.10.24
+ARG LUA_MODULE_VERSION=0.10.25
 ARG DEVEL_KIT_MODULE_VERSION=0.3.2
 ARG VERSION_PCRE=8.45
 ARG PCRE_FOLDER=pcre-${VERSION_PCRE}
 ARG VERSION_ZLIB=1.2.13
-ARG VERSION_LUA_RUSTY_CORE=0.1.26
+ARG VERSION_LUA_RUSTY_CORE=0.1.27
 ARG VERSION_RUSTY_LRU=0.13
 ARG VERSION_LUAJIT=2.1-20230410
 ARG SOURCE_FOLDER="/usr/src"
@@ -79,7 +79,7 @@ ARG CONFIG="\
 # resolves #166
 ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
 
-RUN apk add --no-cache --virtual .openssl-deps openssl libretls tzdata \ 
+RUN apk add --no-cache --virtual .libressl-deps libressl libretls tzdata \ 
   && apk add --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/edge/community gnu-libiconv \ 
   && GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
   && addgroup -S nginx \
@@ -90,7 +90,7 @@ RUN apk add --no-cache --virtual .openssl-deps openssl libretls tzdata \
       libc-dev \
       make \
       libtool \
-      openssl-dev \
+      libressl-dev \
       file \
       libretls-dev \
       automake \
@@ -234,7 +234,7 @@ RUN echo @testing https://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk
     dialog \
     autoconf \
     make \
-    openssl-dev \
+    libressl-dev \
     libretls-dev \
     libzip-dev \
     bzip2-dev \

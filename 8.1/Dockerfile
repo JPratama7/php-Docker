@@ -1,4 +1,4 @@
-FROM php:8.1.18-fpm-alpine3.17
+FROM php:8.1.20-fpm-alpine3.18
 
 LABEL maintainer="JPratama7 <josepratama080@gmail.com>"
 
@@ -14,12 +14,12 @@ ENV php_conf=/usr/local/etc/php-fpm.conf \
     COMPILE_FLAGS="-O3 -pipe -fmodulo-sched -fmodulo-sched-allow-regmoves -flto -fipa-ra -ftree-loop-linear -floop-block -floop-strip-mine -fsplit-paths -floop-unroll-and-jam -fipa-pta -fgcse-lm -fgcse-sm -flive-range-shrinkage -fsched-pressure -fuse-linker-plugin -ffat-lto-objects -ftree-vectorize -fdata-sections -ffunction-sections -mfpmath=sse -fgraphite-identity -ftree-loop-ivcanon -fivopts  -floop-interchange -floop-nest-optimize -floop-parallelize-all -ftree-loop-distribution -fira-hoist-pressure -fira-loop-pressure -ftree-loop-im"
 
 ARG NGINX_VERSION=1.24.0
-ARG LUA_MODULE_VERSION=0.10.24
+ARG LUA_MODULE_VERSION=0.10.25
 ARG DEVEL_KIT_MODULE_VERSION=0.3.2
 ARG VERSION_PCRE=8.45
 ARG PCRE_FOLDER=pcre-${VERSION_PCRE}
 ARG VERSION_ZLIB=1.2.13
-ARG VERSION_LUA_RUSTY_CORE=0.1.26
+ARG VERSION_LUA_RUSTY_CORE=0.1.27
 ARG VERSION_RUSTY_LRU=0.13
 ARG VERSION_LUAJIT=2.1-20230410
 ARG SOURCE_FOLDER="/usr/src"
