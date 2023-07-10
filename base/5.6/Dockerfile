@@ -88,7 +88,7 @@ RUN set -xe; \
 COPY docker-php-source /usr/local/bin/
 
 RUN set -xe \
-	&& docker-php-source extract \	
+	&& tar -Jxf /usr/src/php.tar.xz -C "/usr/src/" --strip-components=1 \	
 	&& apk add --no-cache --virtual .build-deps \
 		$PHPIZE_DEPS \
 		coreutils \
