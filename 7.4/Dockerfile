@@ -79,7 +79,7 @@ ARG CONFIG="\
 # resolves #166
 ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
 
-RUN apk add --no-cache --virtual .libressl-deps libressl libretls tzdata \ 
+RUN apk add --no-cache --virtual .libressl-deps libressl tzdata \ 
   && apk add --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/edge/community gnu-libiconv \ 
   && GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
   && addgroup -S nginx \
@@ -92,7 +92,6 @@ RUN apk add --no-cache --virtual .libressl-deps libressl libretls tzdata \
       libtool \
       libressl-dev \
       file \
-      libretls-dev \
       automake \
       linux-headers \
       curl \
@@ -235,7 +234,6 @@ RUN echo @testing https://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk
     autoconf \
     make \
     libressl-dev \
-    libretls-dev \
     libzip-dev \
     bzip2-dev \
     icu-dev \
