@@ -38,6 +38,7 @@ RUN buildDeps='curl gcc make autoconf libc-dev zlib1g-dev pkg-config' \
             zip \
             unzip \
             python3-pip \
+            python3-wheel \
             python3-setuptools \
             git \
             libmemcached-dev \
@@ -63,8 +64,7 @@ RUN buildDeps='curl gcc make autoconf libc-dev zlib1g-dev pkg-config' \
             php-pear \
     && pecl -d php_suffix=${PHP_VER} install -o -f redis-4.3.0 memcached-2.2.0 \
     && mkdir -p /run/php \
-    && pip install wheel \
-    && pip install supervisor \
+    && pip install --break-system-packages supervisor \
     && pip install git+https://github.com/coderanger/supervisor-stdout \
     && echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d \
     && rm -rf /etc/nginx/conf.d/default.conf \
