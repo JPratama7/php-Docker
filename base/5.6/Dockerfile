@@ -1,199 +1,121 @@
-FROM alpine:3.8
+FROM debian:bookworm-slim
 
-# dependencies required for running "phpize"
-# these get automatically installed and removed by "docker-php-ext-*" (unless they're already installed)
-ENV PHPIZE_DEPS \
-		autoconf \
-		dpkg-dev dpkg \
-		file \
-		g++ \
-		gcc \
-		libc-dev \
-		make \
-		pkgconf \
-		re2c
+LABEL maintainer="Colin Wilson colin@wyveo.com"
 
-# persistent / runtime deps
-RUN apk add --no-cache --virtual .persistent-deps \
-		ca-certificates \
-		curl \
-		tar \
-		xz \
-# https://github.com/docker-library/php/issues/494
-		libressl
+# Let the container know that there is no tty
+ENV DEBIAN_FRONTEND noninteractive
+ENV NGINX_VERSION 1.25.0-1~bookworm
+ENV PHP_VER 5.6
+ENV php_conf /etc/php/${PHP_VER}/fpm/php.ini
+ENV fpm_conf /etc/php/${PHP_VER}/fpm/pool.d/www.conf
+ENV COMPOSER_VERSION 2.5.8
 
-# http://git.alpinelinux.org/cgit/aports/tree/main/apache2/apache2.pre-install?h=v3.3.2
-# http://git.alpinelinux.org/cgit/aports/tree/main/lighttpd/lighttpd.pre-install?h=v3.3.2
-# http://git.alpinelinux.org/cgit/aports/tree/main/nginx-initscripts/nginx-initscripts.pre-install?h=v3.3.2
+# Install Basic Requirements
+RUN buildDeps='curl gcc make autoconf libc-dev zlib1g-dev pkg-config' \
+    && set -x \
+    && apt-get update \
+    && apt-get install --no-install-recommends $buildDeps --no-install-suggests -q -y gnupg2 dirmngr wget apt-transport-https lsb-release ca-certificates \
+    && \
+    NGINX_GPGKEY=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62; \
+          found=''; \
+          for server in \
+                  ha.pool.sks-keyservers.net \
+                  hkp://keyserver.ubuntu.com:80 \
+                  hkp://p80.pool.sks-keyservers.net:80 \
+                  pgp.mit.edu \
+          ; do \
+                  echo "Fetching GPG key $NGINX_GPGKEY from $server"; \
+                  apt-key adv --batch --keyserver "$server" --keyserver-options timeout=10 --recv-keys "$NGINX_GPGKEY" && found=yes && break; \
+          done; \
+    test -z "$found" && echo >&2 "error: failed to fetch GPG key $NGINX_GPGKEY" && exit 1; \
+    echo "deb http://nginx.org/packages/mainline/debian/ $(lsb_release -sc) nginx" >> /etc/apt/sources.list \
+    && wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg \
+    && echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" > /etc/apt/sources.list.d/php.list \
+    && apt-get update \
+    && apt-get install --no-install-recommends --no-install-suggests -q -y \
+            apt-utils \
+            nano \
+            zip \
+            unzip \
+            python3-pip \
+            python3-setuptools \
+            git \
+            libmemcached-dev \
+            libmemcached11 \
+            libmagickwand-dev \
+            nginx=${NGINX_VERSION} \
+            php${PHP_VER}-fpm \
+            php${PHP_VER}-cli \
+            php${PHP_VER}-bcmath \
+            php${PHP_VER}-dev \
+            php${PHP_VER}-common \
+            php${PHP_VER}-opcache \
+            php${PHP_VER}-readline \
+            php${PHP_VER}-mbstring \
+            php${PHP_VER}-curl \
+            php${PHP_VER}-gd \
+            php${PHP_VER}-imagick \
+            php${PHP_VER}-mysql \
+            php${PHP_VER}-zip \
+            php${PHP_VER}-pgsql \
+            php${PHP_VER}-intl \
+            php${PHP_VER}-xml \
+            php-pear \
+    && pecl -d php_suffix=${PHP_VER} install -o -f redis-4.3.0 memcached-2.2.0 \
+    && mkdir -p /run/php \
+    && pip install wheel \
+    && pip install supervisor \
+    && pip install git+https://github.com/coderanger/supervisor-stdout \
+    && echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d \
+    && rm -rf /etc/nginx/conf.d/default.conf \
+    && sed -i -e "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/g" ${php_conf} \
+    && sed -i -e "s/memory_limit\s*=\s*.*/memory_limit = 256M/g" ${php_conf} \
+    && sed -i -e "s/upload_max_filesize\s*=\s*2M/upload_max_filesize = 100M/g" ${php_conf} \
+    && sed -i -e "s/post_max_size\s*=\s*8M/post_max_size = 100M/g" ${php_conf} \
+    && sed -i -e "s/variables_order = \"GPCS\"/variables_order = \"EGPCS\"/g" ${php_conf} \
+    && sed -i -e "s/;daemonize\s*=\s*yes/daemonize = no/g" /etc/php/${PHP_VER}/fpm/php-fpm.conf \
+    && sed -i -e "s/;catch_workers_output\s*=\s*yes/catch_workers_output = yes/g" ${fpm_conf} \
+    && sed -i -e "s/pm.max_children = 5/pm.max_children = 4/g" ${fpm_conf} \
+    && sed -i -e "s/pm.start_servers = 2/pm.start_servers = 3/g" ${fpm_conf} \
+    && sed -i -e "s/pm.min_spare_servers = 1/pm.min_spare_servers = 2/g" ${fpm_conf} \
+    && sed -i -e "s/pm.max_spare_servers = 3/pm.max_spare_servers = 4/g" ${fpm_conf} \
+    && sed -i -e "s/pm.max_requests = 500/pm.max_requests = 200/g" ${fpm_conf} \
+    && sed -i -e "s/www-data/nginx/g" ${fpm_conf} \
+    && sed -i -e "s/^;clear_env = no$/clear_env = no/" ${fpm_conf} \
+    && echo "extension=redis.so" > /etc/php/${PHP_VER}/mods-available/redis.ini \
+    && echo "extension=memcached.so" > /etc/php/${PHP_VER}/mods-available/memcached.ini \
+    && echo "extension=imagick.so" > /etc/php/${PHP_VER}/mods-available/imagick.ini \
+    && ln -sf /etc/php/${PHP_VER}/mods-available/redis.ini /etc/php/${PHP_VER}/fpm/conf.d/20-redis.ini \
+    && ln -sf /etc/php/${PHP_VER}/mods-available/redis.ini /etc/php/${PHP_VER}/cli/conf.d/20-redis.ini \
+    && ln -sf /etc/php/${PHP_VER}/mods-available/memcached.ini /etc/php/${PHP_VER}/fpm/conf.d/20-memcached.ini \
+    && ln -sf /etc/php/${PHP_VER}/mods-available/memcached.ini /etc/php/${PHP_VER}/cli/conf.d/20-memcached.ini \
+    && ln -sf /etc/php/${PHP_VER}/mods-available/imagick.ini /etc/php/${PHP_VER}/fpm/conf.d/20-imagick.ini \
+    && ln -sf /etc/php/${PHP_VER}/mods-available/imagick.ini /etc/php/${PHP_VER}/cli/conf.d/20-imagick.ini \
+    # Install Composer
+    && curl -o /tmp/composer-setup.php https://getcomposer.org/installer \
+    && curl -o /tmp/composer-setup.sig https://composer.github.io/installer.sig \
+    && php -r "if (hash('SHA384', file_get_contents('/tmp/composer-setup.php')) !== trim(file_get_contents('/tmp/composer-setup.sig'))) { unlink('/tmp/composer-setup.php'); echo 'Invalid installer' . PHP_EOL; exit(1); }" \
+    && php /tmp/composer-setup.php --no-ansi --install-dir=/usr/local/bin --filename=composer --version=${COMPOSER_VERSION} \
+    && rm -rf /tmp/composer-setup.php \
+    # Clean up
+    && rm -rf /tmp/pear \
+    && apt-get purge -y --auto-remove $buildDeps \
+    && apt-get clean \
+    && apt-get autoremove \
+    && rm -rf /var/lib/apt/lists/*
 
-ENV PHP_INI_DIR /usr/local/etc/php
-RUN mkdir -p $PHP_INI_DIR/conf.d
+# Supervisor config
+COPY ./supervisord.conf /etc/supervisord.conf
 
-ENV PHP_EXTRA_CONFIGURE_ARGS --enable-fpm --with-fpm-user=www-data --with-fpm-group=www-data --disable-cgi
+# Override nginx's default config
+COPY ./default.conf /etc/nginx/conf.d/default.conf
 
-# Apply stack smash protection to functions using local buffers and alloca()
-# Make PHP's main executable position-independent (improves ASLR security mechanism, and has no performance impact on x86_64)
-# Enable optimization (-O2)
-# Enable linker optimization (this sorts the hash buckets to improve cache locality, and is non-default)
-# Adds GNU HASH segments to generated executables (this is used if present, and is much faster than sysv hash; in this configuration, sysv hash is also generated)
-# https://github.com/docker-library/php/issues/272
-ENV PHP_CFLAGS="-fstack-protector-strong -fpic -fpie -O2"
-ENV PHP_CPPFLAGS="$PHP_CFLAGS"
-ENV PHP_LDFLAGS="-Wl,-O1 -Wl,--hash-style=both -pie"
+# Override default nginx welcome page
+COPY html /usr/share/nginx/html
 
-ENV GPG_KEYS 0BD78B5F97500D450838F95DFE857D9A90D90EC1 6E4F6AB321FDC07F2C332E3AC2BF0BC433CFC8B3
+# Copy Scripts
+COPY ./start.sh /start.sh
 
-ENV PHP_VERSION 5.6.40
-ENV PHP_URL="https://secure.php.net/get/php-5.6.40.tar.xz/from/this/mirror" PHP_ASC_URL="https://secure.php.net/get/php-5.6.40.tar.xz.asc/from/this/mirror"
-ENV PHP_SHA256="1369a51eee3995d7fbd1c5342e5cc917760e276d561595b6052b21ace2656d1c" PHP_MD5=""
+EXPOSE 80
 
-RUN set -xe; \
-	\
-	apk add --no-cache --virtual .fetch-deps \
-		gnupg \
-		wget \
-	; \
-	\
-	mkdir -p /usr/src; \
-	cd /usr/src; \
-	\
-	wget -O php.tar.xz "$PHP_URL"; \
-	\
-	if [ -n "$PHP_SHA256" ]; then \
-		echo "$PHP_SHA256 *php.tar.xz" | sha256sum -c -; \
-	fi; \
-	if [ -n "$PHP_MD5" ]; then \
-		echo "$PHP_MD5 *php.tar.xz" | md5sum -c -; \
-	fi; \
-	\
-	if [ -n "$PHP_ASC_URL" ]; then \
-		wget -O php.tar.xz.asc "$PHP_ASC_URL"; \
-		export GNUPGHOME="$(mktemp -d)"; \
-		for key in $GPG_KEYS; do \
-			# gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
-			( gpg --keyserver keyserver.ubuntu.com --recv-keys "$key" \
-			|| gpg --keyserver hkp://p80.pool.sks-keyservers.net:80 \ --recv-keys "$key" \
-  			|| gpg --keyserver pgp.mit.edu --recv-keys "$key" \
-  			|| gpg --keyserver keyserver.pgp.com --recv-keys "$key" )\
-		done; \
-		gpg --batch --verify php.tar.xz.asc php.tar.xz; \
-		command -v gpgconf > /dev/null && gpgconf --kill all; \
-		rm -rf "$GNUPGHOME"; \
-	fi; \
-	\
-	apk del .fetch-deps
-
-COPY docker-php-source /usr/local/bin/
-
-RUN set -xe \
-	&& apk add --no-cache --virtual .build-deps \
-		$PHPIZE_DEPS \
-		coreutils \
-		curl-dev \
-		libedit-dev \
-		libressl-dev \
-		libxml2-dev \
-		sqlite-dev \
-	\
-	&& export CFLAGS="$PHP_CFLAGS" \
-		CPPFLAGS="$PHP_CPPFLAGS" \
-		LDFLAGS="$PHP_LDFLAGS" \
-	&& mkdir /usr/src/php && tar -Jxf /usr/src/php.tar.xz -C "/usr/src/php" --strip-components=1 \
-	&& cd /usr/src/php \
-	&& gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
-	&& ./configure \
-		--build="$gnuArch" \
-		--with-config-file-path="$PHP_INI_DIR" \
-		--with-config-file-scan-dir="$PHP_INI_DIR/conf.d" \
-		\
-# make sure invalid --configure-flags are fatal errors intead of just warnings
-		--enable-option-checking=fatal \
-		\
-# https://github.com/docker-library/php/issues/439
-		--with-mhash \
-		\
-# --enable-ftp is included here because ftp_ssl_connect() needs ftp to be compiled statically (see https://github.com/docker-library/php/issues/236)
-		--enable-ftp \
-# --enable-mbstring is included here because otherwise there's no way to get pecl to use it properly (see https://github.com/docker-library/php/issues/195)
-		--enable-mbstring \
-# --enable-mysqlnd is included here because it's harder to compile after the fact than extensions are (since it's a plugin for several extensions, not an extension in itself)
-		--enable-mysqlnd \
-		\
-		--with-curl \
-		--with-libedit \
-		--with-openssl \
-		--with-zlib \
-		\
-# bundled pcre does not support JIT on s390x
-# https://manpages.debian.org/stretch/libpcre3-dev/pcrejit.3.en.html#AVAILABILITY_OF_JIT_SUPPORT
-		$(test "$gnuArch" = 's390x-linux-gnu' && echo '--without-pcre-jit') \
-		\
-		$PHP_EXTRA_CONFIGURE_ARGS \
-	&& make -j "$(nproc)" \
-	&& make install \
-	&& { find /usr/local/bin /usr/local/sbin -type f -perm +0111 -exec strip --strip-all '{}' + || true; } \
-	&& make clean \
-	\
-# https://github.com/docker-library/php/issues/692 (copy default example "php.ini" files somewhere easily discoverable)
-	&& cp -v php.ini-* "$PHP_INI_DIR/" \
-	\
-	&& cd / \
-	&& rm -rf /usr/src/php \
-	\
-	&& runDeps="$( \
-		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
-			| tr ',' '\n' \
-			| sort -u \
-			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
-	)" \
-	&& apk add --no-cache --virtual .php-rundeps $runDeps \
-	\
-	&& apk del .build-deps \
-	\
-# https://github.com/docker-library/php/issues/443
-	&& pecl update-channels \
-	&& rm -rf /tmp/pear ~/.pearrc
-
-COPY docker-php-ext-* docker-php-entrypoint /usr/local/bin/
-
-ENTRYPOINT ["docker-php-entrypoint"]
-WORKDIR /var/www/html
-
-RUN set -ex \
-	&& cd /usr/local/etc \
-	&& if [ -d php-fpm.d ]; then \
-		# for some reason, upstream's php-fpm.conf.default has "include=NONE/etc/php-fpm.d/*.conf"
-		sed 's!=NONE/!=!g' php-fpm.conf.default | tee php-fpm.conf > /dev/null; \
-		cp php-fpm.d/www.conf.default php-fpm.d/www.conf; \
-	else \
-		# PHP 5.x doesn't use "include=" by default, so we'll create our own simple config that mimics PHP 7+ for consistency
-		mkdir php-fpm.d; \
-		cp php-fpm.conf.default php-fpm.d/www.conf; \
-		{ \
-			echo '[global]'; \
-			echo 'include=etc/php-fpm.d/*.conf'; \
-		} | tee php-fpm.conf; \
-	fi \
-	&& { \
-		echo '[global]'; \
-		echo 'error_log = /proc/self/fd/2'; \
-		echo; \
-		echo '[www]'; \
-		echo '; if we send this to /proc/self/fd/1, it never appears'; \
-		echo 'access.log = /proc/self/fd/2'; \
-		echo; \
-		echo 'clear_env = no'; \
-		echo; \
-		echo '; Ensure worker stdout and stderr are sent to the main error log.'; \
-		echo 'catch_workers_output = yes'; \
-	} | tee php-fpm.d/docker.conf \
-	&& { \
-		echo '[global]'; \
-		echo 'daemonize = no'; \
-		echo; \
-		echo '[www]'; \
-		echo 'listen = 9000'; \
-	} | tee php-fpm.d/zz-docker.conf
-
-EXPOSE 9000
-CMD ["php-fpm"]
+CMD ["/start.sh"]

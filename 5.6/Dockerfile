@@ -1,4 +1,4 @@
-FROM php:8.1.18-fpm-alpine3.17
+FROM jpratama7/php-fpm:5.6-latest
 
 LABEL maintainer="JPratama7 <josepratama080@gmail.com>"
 
@@ -79,7 +79,7 @@ ARG CONFIG="\
 # resolves #166
 ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
 
-RUN apk add --no-cache --virtual .openssl-deps openssl libretls \ 
+RUN apk add --no-cache --virtual .libressl-deps libressl \ 
   && apk add --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/edge/community gnu-libiconv \ 
   && GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
   && addgroup -S nginx \
@@ -90,9 +90,8 @@ RUN apk add --no-cache --virtual .openssl-deps openssl libretls \
       libc-dev \
       make \
       libtool \
-      openssl-dev \
+      libressl-dev \
       file \
-      libretls-dev \
       automake \
       linux-headers \
       curl \
@@ -234,8 +233,7 @@ RUN echo @testing https://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk
     dialog \
     autoconf \
     make \
-    openssl-dev \
-    libretls-dev \
+    libressl-dev \
     libzip-dev \
     bzip2-dev \
     icu-dev \
