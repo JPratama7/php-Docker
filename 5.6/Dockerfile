@@ -11,7 +11,8 @@ ENV php_conf=/usr/local/etc/php-fpm.conf \
     LUAJIT_LIB=/usr/local/lib \
     LUAJIT_INC=/usr/local/include/luajit-2.1 \
     LUA_RESTY_PATH=/usr/local/share/lua/5.1 \
-    COMPILE_FLAGS="-O3 -pipe -fmodulo-sched -fmodulo-sched-allow-regmoves -flto -fipa-ra -ftree-loop-linear -floop-block -floop-strip-mine -fsplit-paths -floop-unroll-and-jam -fipa-pta -fgcse-lm -fgcse-sm -flive-range-shrinkage -fsched-pressure -fuse-linker-plugin -ffat-lto-objects -ftree-vectorize -fdata-sections -ffunction-sections -mfpmath=sse -fgraphite-identity -ftree-loop-ivcanon -fivopts  -floop-interchange -floop-nest-optimize -floop-parallelize-all -ftree-loop-distribution -fira-hoist-pressure -fira-loop-pressure -ftree-loop-im"
+    COMPILE_FLAGS="-O3 -pipe -fmodulo-sched -fmodulo-sched-allow-regmoves -flto -fipa-ra -ftree-loop-linear -floop-block -floop-strip-mine -fsplit-paths -floop-unroll-and-jam -fipa-pta -fgcse-lm -fgcse-sm -flive-range-shrinkage -fsched-pressure -fuse-linker-plugin -ffat-lto-objects -ftree-vectorize -fdata-sections -ffunction-sections -mfpmath=sse -fgraphite-identity -ftree-loop-ivcanon -fivopts  -floop-interchange -floop-nest-optimize -floop-parallelize-all -ftree-loop-distribution -fira-hoist-pressure -fira-loop-pressure -ftree-loop-im" \
+    BUILD_DEPS="autoconf g++ libc-dev make libtool libssl-dev file automake curl gnupg libxslt-dev libgd-dev libmaxminddb-dev perl xclip"
 
 ARG NGINX_VERSION=1.24.0
 ARG LUA_MODULE_VERSION=0.10.24
@@ -76,31 +77,13 @@ ARG CONFIG="\
     --with-pcre-jit \
   "
 
-# resolves #166
-ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
 
-RUN apk add --no-cache --virtual .libressl-deps libressl \ 
-  && apk add --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/edge/community gnu-libiconv \ 
+RUN apt update \
+  && apt-get install --no-install-recommends --no-install-suggests -q -y libssl openssl \ 
   && GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
   && addgroup -S nginx \
   && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \ 
-  && apk add --no-cache --virtual .build-deps \
-      autoconf \
-      g++ \
-      libc-dev \
-      make \
-      libtool \
-      libressl-dev \
-      file \
-      automake \
-      linux-headers \
-      curl \
-      gnupg \
-      libxslt-dev \
-      gd-dev \
-      libmaxminddb-dev \
-      perl-dev \
-      xclip \
+  && apt-get install --no-install-recommends --no-install-suggests -q -y ${BUILD_DEPS} \
   && mkdir -p /usr/src \
   && cd /usr/src \
   && echo "Downloading......" \
@@ -192,9 +175,9 @@ RUN apk add --no-cache --virtual .libressl-deps libressl \
   \
   # Bring in gettext so we can get `envsubst`, then throw
   # the rest away. To do this, we need to install `gettext`
-  # then move `envsubst` out of the way so `gettext` can
+  # then move `envsubst` out of the way so `gettext` `1`
   # be deleted completely, then move `envsubst` back.
-  && apk add --no-cache --virtual .gettext gettext \
+  && apt-get install --no-install-recommends --no-install-suggests -q -y gettext \
   && mv /usr/bin/envsubst /tmp/ \
   \
   && runDeps="$( \
@@ -204,9 +187,11 @@ RUN apk add --no-cache --virtual .libressl-deps libressl \
       | xargs -r apk info --installed \
       | sort -u \
   )" \
-  && apk add --no-cache --virtual .nginx-rundeps $runDeps \
-  && apk del .build-deps \
-  && apk del .gettext \
+  && apt-get install --no-install-recommends --no-install-suggests -q -y $runDeps \
+  && apt-get purge -y --auto-remove $BUILD_DEPS \
+  && apt-get clean \
+  && apt-get autoremove \
+  && apt-get purge -y --auto-remove gettext \
   && mv /tmp/envsubst /usr/local/bin/ \
   \
   # forward request and error logs to docker log collector
@@ -215,69 +200,46 @@ RUN apk add --no-cache --virtual .libressl-deps libressl \
   && mkdir /var/log/php/ \
   && ln -sf /dev/stderr /var/log/php/error.log
 
-RUN echo @testing https://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories && \
-    echo /etc/apk/respositories && \
-    apk update && apk upgrade &&\
-    apk add --no-cache \
-    bash \
-    openssh-client \
-    wget \
-    supervisor \
-    curl \
-    libcurl \
-    libpq \
-    git \
-    python3 \
-    py3-pip \
-    ca-certificates \
-    dialog \
-    autoconf \
-    make \
-    libressl-dev \
-    libzip-dev \
-    bzip2-dev \
-    icu-dev \
-    g++ && \
-    apk add --no-cache --virtual .sys-deps \
-    musl-dev \
-    linux-headers \
-    augeas-dev \
-    libmcrypt-dev \
-    libpng-dev \
-    libxslt-dev \
-    python3-dev \
-    libffi-dev \
-    freetype-dev \
-    sqlite-dev \
-    imap-dev \
-    libjpeg-turbo-dev \
-    postgresql-dev && \
-    docker-php-ext-configure gd \
-      --enable-gd \
-      --with-freetype \
-      --with-jpeg && \
-    docker-php-ext-install gd && \
-     pip install --upgrade pip && \
-    #curl iconv session
-    #docker-php-ext-install pdo_mysql pdo_sqlite mysqli mcrypt gd exif intl xsl json soap dom zip opcache && \
-    # docker-php-ext-install iconv pdo_mysql pdo_sqlite pgsql pdo_pgsql mysqli gd exif intl xsl json soap dom zip opcache && \
-    docker-php-ext-install pdo_mysql mysqli pdo_sqlite pgsql pdo_pgsql exif intl xsl soap zip && \
-    pecl install xdebug-3.1.4 && \
-    pecl install -o -f redis && \
-    echo "extension=redis.so" > /usr/local/etc/php/conf.d/redis.ini && \
-    docker-php-source delete && \
-    mkdir -p /etc/nginx && \
-    mkdir -p /var/www/app && \
-    mkdir -p /run/nginx && \
-    mkdir -p /var/log/supervisor && \
-    php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" && \
-    php composer-setup.php --quiet --install-dir=/usr/bin --filename=composer && \
-    rm composer-setup.php &&\
-  #  pip3 install -U pip && \
-    pip3 install -U certbot && \
-    mkdir -p /etc/letsencrypt/webrootauth && \
-    apk del g++ musl-dev linux-headers libffi-dev augeas-dev python3-dev make autoconf && \
-    apk del .sys-deps
+
+RUN apt-get install --no-install-recommends --no-install-suggests -q -y \
+        php${PHP_VER}-xdebug \
+        php${PHP_VER}-gd \
+        php${PHP_VER}-mysql \
+        php${PHP_VER}-pgsql \
+        php${PHP_VER}-exif \
+        php${PHP_VER}-intl \
+        php${PHP_VER}-xsl \
+        php${PHP_VER}-soap \
+        php${PHP_VER}-zip 
+
+# RUN echo @testing https://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories && \
+#     echo /etc/apk/respositories && \
+#     apk update && apk upgrade &&\
+#     apk add --no-cache \
+#     bash \
+#     openssh-client \
+#     wget \
+#     supervisor \
+#     curl \
+#     libcurl \
+#     libpq \
+#     git \
+#     python3 \
+#     py3-pip \
+#     ca-certificates \
+#     dialog \
+#     autoconf \
+#     make \
+#     libressl-dev \
+#     libzip-dev \
+#     bzip2-dev \
+#     icu-dev \
+#     g++ && \
+#   #  pip3 install -U pip && \
+#     pip3 install -U certbot && \
+#     mkdir -p /etc/letsencrypt/webrootauth && \
+#     apk del g++ musl-dev linux-headers libffi-dev augeas-dev python3-dev make autoconf && \
+#     apk del .sys-deps
 #    ln -s /usr/bin/php7 /usr/bin/php
 
 ADD 8.1/conf/supervisord.conf /etc/supervisord.conf
