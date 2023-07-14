@@ -79,7 +79,7 @@ RUN set -x \
     && ln -s /usr/sbin/php-fpm${PHP_BASE} /usr/sbin/php-fpm \
     # Clean up
     && rm -rf /tmp/pear \
-    && apt-get purge -y --auto-remove $buildDeps \
+    && apt-get purge -y --auto-remove $BUILD_DEPS \
     && apt-get clean \
     && apt-get autoremove \
     && rm -rf /var/lib/apt/lists/*
