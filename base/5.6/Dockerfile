@@ -11,6 +11,8 @@ ENV COMPOSER_VERSION 2.5.8
 
 ARG BUILD_DEPS='curl gcc make autoconf libc-dev zlib1g-dev pkg-config gnupg2 dirmngr wget'
 
+COPY docker-php-ext-* docker-php-entrypoint /usr/local/bin/
+
 # Install Basic Requirements
 RUN set -x \
     && apt-get update \
