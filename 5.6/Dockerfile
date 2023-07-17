@@ -210,43 +210,13 @@ RUN apt-get install --no-install-recommends --no-install-suggests -q -y \
         php${PHP_VER}-intl \
         php${PHP_VER}-xsl \
         php${PHP_VER}-soap \
-        php${PHP_VER}-zip 
+        php${PHP_VER}-zip
 
-# RUN echo @testing https://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories && \
-#     echo /etc/apk/respositories && \
-#     apk update && apk upgrade &&\
-#     apk add --no-cache \
-#     bash \
-#     openssh-client \
-#     wget \
-#     supervisor \
-#     curl \
-#     libcurl \
-#     libpq \
-#     git \
-#     python3 \
-#     py3-pip \
-#     ca-certificates \
-#     dialog \
-#     autoconf \
-#     make \
-#     libressl-dev \
-#     libzip-dev \
-#     bzip2-dev \
-#     icu-dev \
-#     g++ && \
-#   #  pip3 install -U pip && \
-#     pip3 install -U certbot && \
-#     mkdir -p /etc/letsencrypt/webrootauth && \
-#     apk del g++ musl-dev linux-headers libffi-dev augeas-dev python3-dev make autoconf && \
-#     apk del .sys-deps
-#    ln -s /usr/bin/php7 /usr/bin/php
-
-ADD 8.1/conf/supervisord.conf /etc/supervisord.conf
+ADD ${PHP_VER}/conf/supervisord.conf /etc/supervisord.conf
 
 # Copy our nginx config
 RUN rm -Rf /etc/nginx/nginx.conf
-ADD 8.1/conf/nginx.conf /etc/nginx/nginx.conf
+ADD ${PHP_VER}/conf/nginx.conf /etc/nginx/nginx.conf
 
 # nginx site conf
 RUN mkdir -p /etc/nginx/sites-available/ \
@@ -255,8 +225,8 @@ RUN mkdir -p /etc/nginx/sites-available/ \
     && rm -Rf /var/www/* \
     && mkdir /var/www/html/
 
-ADD 8.1/conf/nginx-site.conf /etc/nginx/sites-available/default.conf
-ADD 8.1/conf/nginx-site-ssl.conf /etc/nginx/sites-available/default-ssl.conf
+ADD ${PHP_VER}/conf/nginx-site.conf /etc/nginx/sites-available/default.conf
+ADD ${PHP_VER}/conf/nginx-site-ssl.conf /etc/nginx/sites-available/default-ssl.conf
 RUN ln -s /etc/nginx/sites-available/default.conf /etc/nginx/sites-enabled/default.conf
 
 # tweak php-fpm config
@@ -294,16 +264,16 @@ RUN cp /usr/local/etc/php/php.ini-development /usr/local/etc/php/php.ini \
 
 
 # Add Scripts
-ADD 8.1/scripts/start.sh /start.sh
-ADD 8.1/scripts/pull /usr/bin/pull
-ADD 8.1/scripts/push /usr/bin/push
-ADD 8.1/scripts/letsencrypt-setup /usr/bin/letsencrypt-setup
-ADD 8.1/scripts/letsencrypt-renew /usr/bin/letsencrypt-renew
+ADD ${PHP_VER}/scripts/start.sh /start.sh
+ADD ${PHP_VER}/scripts/pull /usr/bin/pull
+ADD ${PHP_VER}/scripts/push /usr/bin/push
+ADD ${PHP_VER}/scripts/letsencrypt-setup /usr/bin/letsencrypt-setup
+ADD ${PHP_VER}/scripts/letsencrypt-renew /usr/bin/letsencrypt-renew
 RUN chmod 755 /usr/bin/pull && chmod 755 /usr/bin/push && chmod 755 /usr/bin/letsencrypt-setup && chmod 755 /usr/bin/letsencrypt-renew && chmod 755 /start.sh
 
 # copy in code
-ADD 8.1/src/ /var/www/html/
-ADD 8.1/errors/ /var/www/errors
+ADD ${PHP_VER}/src/ /var/www/html/
+ADD ${PHP_VER}/errors/ /var/www/errors
 
 
 EXPOSE 443 80
