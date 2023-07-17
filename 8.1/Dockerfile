@@ -14,7 +14,7 @@ ENV php_conf=/usr/local/etc/php-fpm.conf \
     COMPILE_FLAGS="-O3 -pipe -fmodulo-sched -fmodulo-sched-allow-regmoves -flto -fipa-ra -ftree-loop-linear -floop-block -floop-strip-mine -fsplit-paths -floop-unroll-and-jam -fipa-pta -fgcse-lm -fgcse-sm -flive-range-shrinkage -fsched-pressure -fuse-linker-plugin -ffat-lto-objects -ftree-vectorize -fdata-sections -ffunction-sections -mfpmath=sse -fgraphite-identity -ftree-loop-ivcanon -fivopts  -floop-interchange -floop-nest-optimize -floop-parallelize-all -ftree-loop-distribution -fira-hoist-pressure -fira-loop-pressure -ftree-loop-im"
 
 ARG NGINX_VERSION=1.24.0
-ARG LUA_MODULE_VERSION=0.10.25
+ARG LUA_MODULE_VERSION=0.10.24
 ARG DEVEL_KIT_MODULE_VERSION=0.3.2
 ARG VERSION_PCRE=8.45
 ARG PCRE_FOLDER=pcre-${VERSION_PCRE}
@@ -256,7 +256,7 @@ RUN echo @testing https://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk
       --with-freetype \
       --with-jpeg && \
     docker-php-ext-install gd && \
-     pip install --upgrade pip && \
+    pip install --upgrade pip && \
     #curl iconv session
     #docker-php-ext-install pdo_mysql pdo_sqlite mysqli mcrypt gd exif intl xsl json soap dom zip opcache && \
     # docker-php-ext-install iconv pdo_mysql pdo_sqlite pgsql pdo_pgsql mysqli gd exif intl xsl json soap dom zip opcache && \
