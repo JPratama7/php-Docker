@@ -79,7 +79,7 @@ ARG CONFIG="\
 
 
 RUN apt update \
-  && apt-get install --no-install-recommends --no-install-suggests -q -y libssl3 openssl perl \ 
+  && apt-get install --no-install-recommends --no-install-suggests -q -y libssl3 openssl perl pax-utils \ 
   && GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
   && addgroup --system nginx \
   && adduser --system --home /var/cache/nginx --disabled-login nginx \ 
