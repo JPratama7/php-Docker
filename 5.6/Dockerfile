@@ -12,7 +12,7 @@ ENV php_conf=/usr/local/etc/php-fpm.conf \
     LUAJIT_INC=/usr/local/include/luajit-2.1 \
     LUA_RESTY_PATH=/usr/local/share/lua/5.1 \
     COMPILE_FLAGS="-O3 -pipe -fmodulo-sched -fmodulo-sched-allow-regmoves -flto -fipa-ra -ftree-loop-linear -floop-block -floop-strip-mine -fsplit-paths -floop-unroll-and-jam -fipa-pta -fgcse-lm -fgcse-sm -flive-range-shrinkage -fsched-pressure -fuse-linker-plugin -ffat-lto-objects -ftree-vectorize -fdata-sections -ffunction-sections -mfpmath=sse -fgraphite-identity -ftree-loop-ivcanon -fivopts  -floop-interchange -floop-nest-optimize -floop-parallelize-all -ftree-loop-distribution -fira-hoist-pressure -fira-loop-pressure -ftree-loop-im" \
-    BUILD_DEPS="autoconf g++ libc-dev make libtool libssl-dev file automake curl gnupg libxslt-dev libgd-dev libmaxminddb-dev perl xclip"
+    BUILD_DEPS="autoconf g++ libc-dev make libtool libssl-dev file automake curl gnupg libxslt-dev libgd-dev libmaxminddb-dev libperl-dev xclip"
 
 ARG NGINX_VERSION=1.24.0
 ARG LUA_MODULE_VERSION=0.10.24
@@ -79,10 +79,11 @@ ARG CONFIG="\
 
 
 RUN apt update \
-  && apt-get install --no-install-recommends --no-install-suggests -q -y libssl3 openssl \ 
+  && apt-get install --no-install-recommends --no-install-suggests -q -y libssl3 openssl perl \ 
   && GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
-  && addgroup -S nginx \
-  && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \ 
+  && addgroup --system nginx \
+  && adduser --system --home /var/cache/nginx --disabled-login nginx \ 
+  && usermod -g nginx nginx \
   && apt-get install --no-install-recommends --no-install-suggests -q -y ${BUILD_DEPS} \
   && mkdir -p /usr/src \
   && cd /usr/src \
@@ -128,19 +129,23 @@ RUN apt update \
   && tar -zxf rustylru.tar.gz \
   && tar -zxf luajit.tar.gz \
   && cd luajit2-$VERSION_LUAJIT \
+  && echo "Building luajit2" \
   && CFLAGS="$COMPILE_FLAGS" make all && make install \
   && cd /usr/src/lua-resty-core-$VERSION_LUA_RUSTY_CORE \
-  && LUA_LIB_DIR=$LUA_RESTY_PATH CFLAGS="$COMPILE_FLAGS" make install \
+  && echo "Building lua resty" \
+  && LUA_LIB_DIR=${LUA_RESTY_PATH} CFLAGS="$COMPILE_FLAGS" make install \
   && cd /usr/src/lua-resty-lrucache-$VERSION_RUSTY_LRU \
-  && LUA_LIB_DIR=$LUA_RESTY_PATH CFLAGS="$COMPILE_FLAGS" make install \
+  && echo "Building lua resty lrucache" \
+  && LUA_LIB_DIR=$(echo "$LUA_RESTY_PATH" | sed 's/\///') CFLAGS="$COMPILE_FLAGS" make install \
   # && cd /usr/src/pcre2-$VERSION_PCRE \
   # && (./autogen.sh || ./configure) \
   && cd /usr/src \
 #  && tar -zxC /usr/src -f ngx_http_geoip2_module.tar.gz \
 #  && rm nginx.tar.gz ndk.tar.gz lua.tar.gz ngx_http_geoip2_module.tar.gz \ 
   && cd nginx-$NGINX_VERSION \
+  && echo "Building nginx" \
   && ./configure $CONFIG --with-debug \
-            --with-cc-opt="${COMPILE_FLAGS/-O3/}" \
+            --with-cc-opt="$(echo "$COMPILE_FLAGS" | sed 's/-O3//')" \
             --with-pcre-opt="$COMPILE_FLAGS" \
             --with-ld-opt="-Wl,-O4,--sort-common,--gc-sections,--as-needed,-z,relro,-z,now" \
   && make -j$(getconf _NPROCESSORS_ONLN) \
