@@ -12,7 +12,7 @@ ENV php_conf=/usr/local/etc/php-fpm.conf \
     LUAJIT_INC=/usr/local/include/luajit-2.1 \
     LUA_RESTY_PATH=/usr/local/share/lua/5.1 \
     COMPILE_FLAGS="-O3 -pipe -fmodulo-sched -fmodulo-sched-allow-regmoves -flto -fipa-ra -ftree-loop-linear -floop-block -floop-strip-mine -fsplit-paths -floop-unroll-and-jam -fipa-pta -fgcse-lm -fgcse-sm -flive-range-shrinkage -fsched-pressure -fuse-linker-plugin -ffat-lto-objects -ftree-vectorize -fdata-sections -ffunction-sections -mfpmath=sse -fgraphite-identity -ftree-loop-ivcanon -fivopts  -floop-interchange -floop-nest-optimize -floop-parallelize-all -ftree-loop-distribution -fira-hoist-pressure -fira-loop-pressure -ftree-loop-im" \
-    BUILD_DEPS="autoconf g++ libc-dev make libtool libssl-dev file automake curl gnupg libxslt-dev libgd-dev libmaxminddb-dev perl xclip"
+    BUILD_DEPS="autoconf g++ libc-dev make libtool libssl3-dev file automake curl gnupg libxslt-dev libgd-dev libmaxminddb-dev perl xclip"
 
 ARG NGINX_VERSION=1.24.0
 ARG LUA_MODULE_VERSION=0.10.24
@@ -79,7 +79,7 @@ ARG CONFIG="\
 
 
 RUN apt update \
-  && apt-get install --no-install-recommends --no-install-suggests -q -y libssl openssl \ 
+  && apt-get install --no-install-recommends --no-install-suggests -q -y libssl3 openssl \ 
   && GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
   && addgroup -S nginx \
   && adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx nginx \ 
