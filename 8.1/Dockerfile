@@ -88,6 +88,7 @@ RUN apk add --no-cache --virtual .libressl-deps libressl \
       autoconf \
       g++ \
       libc-dev \
+      libressl-dev \
       make \
       libtool \
       file \
