@@ -5,9 +5,9 @@ LABEL maintainer="JPratama7 <josepratama080@gmail.com>"
 
 COPY --from=mlocati/php-extension-installer:latest /usr/bin/install-php-extensions /usr/local/bin/install-php-ext
 
-ENV php_conf=/usr/local/etc/php-fpm.conf \
-    fpm_conf=/usr/local/etc/php-fpm.d/www.conf \
-    php_vars=/usr/local/etc/php/conf.d/docker-vars.ini \
+ENV php_conf=/etc/php/5.6/fpm/php-fpm.conf \
+    fpm_conf=/etc/php/5.6/fpm/pool.d/www.conf \
+    php_vars=/etc/php/5.6/cli/conf.d/docker-vars.ini \
     LUAJIT_LIB=/usr/local/lib \
     LUAJIT_INC=/usr/local/include/luajit-2.1 \
     LUA_RESTY_PATH=/usr/local/share/lua/5.1 \
@@ -162,7 +162,7 @@ RUN apt update \
   && make -j$(getconf _NPROCESSORS_ONLN) \
   && make install \
   && rm -rf /etc/nginx/html/ \
-  && mkdir /etc/nginx/conf.d/ \
+  && mkdir -p /etc/nginx/conf.d/ \
   && mkdir -p /usr/share/nginx/html/ \
   && install -m644 html/index.html /usr/share/nginx/html/ \
   && install -m644 html/50x.html /usr/share/nginx/html/ \
@@ -183,7 +183,7 @@ RUN apt update \
   # then move `envsubst` out of the way so `gettext` `1`
   # be deleted completely, then move `envsubst` back.
   && apt-get install --no-install-recommends --no-install-suggests -q -y gettext \
-  && mv /usr/bin/envsubst /tmp/ \
+  && cp /usr/bin/envsubst /tmp/ \
   \
   && runDeps="$( \
     scanelf --needed --nobanner /usr/sbin/nginx /usr/lib/nginx/modules/*.so /tmp/envsubst \
@@ -202,7 +202,7 @@ RUN apt update \
   # forward request and error logs to docker log collector
   && ln -sf /dev/stdout /var/log/nginx/access.log \
   && ln -sf /dev/stderr /var/log/nginx/error.log \
-  && mkdir /var/log/php/ \
+  && mkdir -p /var/log/php/ \
   && ln -sf /dev/stderr /var/log/php/error.log
 
 
@@ -228,7 +228,7 @@ RUN mkdir -p /etc/nginx/sites-available/ \
     && mkdir -p /etc/nginx/sites-enabled/ \
     && mkdir -p /etc/nginx/ssl/ \
     && rm -Rf /var/www/* \
-    && mkdir /var/www/html/
+    && mkdir -p /var/www/html/
 
 ADD ${PHP_VER}/conf/nginx-site.conf /etc/nginx/sites-available/default.conf
 ADD ${PHP_VER}/conf/nginx-site-ssl.conf /etc/nginx/sites-available/default-ssl.conf
@@ -253,19 +253,15 @@ RUN echo "cgi.fix_pathinfo=0" > ${php_vars} &&\
         -e "s/;listen.mode = 0660/listen.mode = 0666/g" \
         -e "s/;listen.owner = www-data/listen.owner = nginx/g" \
         -e "s/;listen.group = www-data/listen.group = nginx/g" \
-        -e "s/listen = 127.0.0.1:9000/listen = \/var\/run\/php-fpm.sock/g" \
         -e "s/^;clear_env = no$/clear_env = no/" \
         ${fpm_conf}
 #    ln -s /etc/php7/php.ini /etc/php7/conf.d/php.ini && \
 
-RUN cp /usr/local/etc/php/php.ini-development /usr/local/etc/php/php.ini \
-    && sed -i \
+RUN sed -i \
+	    -e "s/;opcache.enable=0/opcache.enable=1/g" \
 	    -e "s/;opcache/opcache/g" \
-	    -e "s/;zend_extension=opcache/zend_extension=opcache/g" \
-            /usr/local/etc/php/php.ini \
-#    && find /usr/src -type f -not \( -name 'php.tar.xz' \) -delete \
-    && cd /usr/src && rm -r `ls | grep -Ev 'php'` \
-    && rm -rf /var/cache/apk/*
+      /etc/php/5.6/cli/php.ini \
+    && rm -rf /var/lib/apt/lists/*
 
 
 # Add Scripts
