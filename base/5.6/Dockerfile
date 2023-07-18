@@ -78,7 +78,7 @@ RUN set -x \
     && php -r "if (hash('SHA384', file_get_contents('/tmp/composer-setup.php')) !== trim(file_get_contents('/tmp/composer-setup.sig'))) { unlink('/tmp/composer-setup.php'); echo 'Invalid installer' . PHP_EOL; exit(1); }" \
     && php /tmp/composer-setup.php --no-ansi --install-dir=/usr/local/bin --filename=composer --version=${COMPOSER_VERSION} \
     && rm -rf /tmp/composer-setup.php \
-    && ln -s /usr/sbin/php-fpm${PHP_BASE} /usr/sbin/php-fpm \
+    && ln -s /usr/sbin/php-fpm /usr/sbin/php-fpm${PHP_BASE} \
     # Clean up
     && rm -rf /tmp/pear \
     && apt-get purge -y --auto-remove $BUILD_DEPS \

@@ -135,7 +135,7 @@ if [ -f /etc/nginx/sites-available/default-ssl.conf ]; then
 fi
 
 # Set the desired timezone
-echo date.timezone=$(cat /etc/TZ) > /etc/php/5.6/cli/conf.d/timezone.ini
+echo date.timezone=$(cat cat /etc/timezone) > /etc/php/5.6/cli/conf.d/timezone.ini
 
 # Display errors in docker logs
 if [ ! -z "$PHP_ERRORS_STDERR" ]; then
@@ -220,7 +220,7 @@ if [ ! -z "$PUID" ]; then
   adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx -u ${PUID} nginx
 else
   if [ -z "$SKIP_CHOWN" ]; then
-    chown -Rf nginx.nginx /var/www/*
+    chown -Rf nginx:nginx /var/www/*
   fi
 fi
 

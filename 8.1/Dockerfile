@@ -2,7 +2,6 @@ FROM php:8.1.20-fpm-alpine3.18
 
 LABEL maintainer="JPratama7 <josepratama080@gmail.com>"
 
-
 COPY --from=mlocati/php-extension-installer:latest /usr/bin/install-php-extensions /usr/local/bin/install-php-ext
 
 ENV php_conf=/usr/local/etc/php-fpm.conf \
@@ -14,7 +13,7 @@ ENV php_conf=/usr/local/etc/php-fpm.conf \
     COMPILE_FLAGS="-O3 -pipe -fmodulo-sched -fmodulo-sched-allow-regmoves -flto -fipa-ra -ftree-loop-linear -floop-block -floop-strip-mine -fsplit-paths -floop-unroll-and-jam -fipa-pta -fgcse-lm -fgcse-sm -flive-range-shrinkage -fsched-pressure -fuse-linker-plugin -ffat-lto-objects -ftree-vectorize -fdata-sections -ffunction-sections -mfpmath=sse -fgraphite-identity -ftree-loop-ivcanon -fivopts  -floop-interchange -floop-nest-optimize -floop-parallelize-all -ftree-loop-distribution -fira-hoist-pressure -fira-loop-pressure -ftree-loop-im"
 
 ARG NGINX_VERSION=1.24.0
-ARG LUA_MODULE_VERSION=0.10.24
+ARG LUA_MODULE_VERSION=0.10.25
 ARG DEVEL_KIT_MODULE_VERSION=0.3.2
 ARG VERSION_PCRE=8.45
 ARG PCRE_FOLDER=pcre-${VERSION_PCRE}
@@ -242,6 +241,7 @@ RUN echo @testing https://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk
     linux-headers \
     augeas-dev \
     libmcrypt-dev \
+    libressl-dev \
     libpng-dev \
     libxslt-dev \
     python3-dev \

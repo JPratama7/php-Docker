@@ -207,6 +207,7 @@ RUN apt update \
 
 
 RUN apt-get install --no-install-recommends --no-install-suggests -q -y \
+        supervisor \
         php${PHP_VER}-xdebug \
         php${PHP_VER}-gd \
         php${PHP_VER}-mysql \
