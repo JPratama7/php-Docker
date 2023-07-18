@@ -1,6 +1,6 @@
 FROM debian:bookworm-slim
 
-LABEL maintainer="Colin Wilson colin@wyveo.com"
+LABEL maintainer="JPratama7 josepratama080@gmail.com"
 
 # Let the container know that there is no tty
 ENV DEBIAN_FRONTEND noninteractive
@@ -78,7 +78,8 @@ RUN set -x \
     && php -r "if (hash('SHA384', file_get_contents('/tmp/composer-setup.php')) !== trim(file_get_contents('/tmp/composer-setup.sig'))) { unlink('/tmp/composer-setup.php'); echo 'Invalid installer' . PHP_EOL; exit(1); }" \
     && php /tmp/composer-setup.php --no-ansi --install-dir=/usr/local/bin --filename=composer --version=${COMPOSER_VERSION} \
     && rm -rf /tmp/composer-setup.php \
-    && ln -s /usr/sbin/php-fpm /usr/sbin/php-fpm${PHP_BASE} \
+    && ln -s /usr/sbin/php-fpm${PHP_BASE} /usr/sbin/php-fpm  \
+    && ln -s /usr/sbin/php-fpm${PHP_BASE} /usr/bin/php-fpm  \
     # Clean up
     && rm -rf /tmp/pear \
     && apt-get purge -y --auto-remove $BUILD_DEPS \
@@ -90,4 +91,4 @@ RUN set -x \
 # Override nginx's default config
 EXPOSE 9000
 
-CMD ["php-fpm"]
+CMD ["php-fpm5.6"]
