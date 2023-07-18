@@ -1,4 +1,4 @@
-FROM php:8.1.20-fpm-alpine3.18
+FROM php:8.1.21-fpm-alpine3.17
 
 LABEL maintainer="JPratama7 <josepratama080@gmail.com>"
 
@@ -78,7 +78,7 @@ ARG CONFIG="\
 # resolves #166
 ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so php
 
-RUN apk add --no-cache --virtual .libressl-deps libressl \ 
+RUN apk add --no-cache --virtual .openssl-deps openssl \ 
   && apk add --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/edge/community gnu-libiconv \ 
   && GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
   && addgroup -S nginx \
@@ -87,7 +87,7 @@ RUN apk add --no-cache --virtual .libressl-deps libressl \
       autoconf \
       g++ \
       libc-dev \
-      libressl-dev \
+      openssl-dev \
       make \
       libtool \
       file \
@@ -100,8 +100,8 @@ RUN apk add --no-cache --virtual .libressl-deps libressl \
       libmaxminddb-dev \
       perl-dev \
       xclip \
-  && mkdir -p /usr/src \
-  && cd /usr/src \
+  && mkdir -p ${SOURCE_FOLDER} \
+  && cd ${SOURCE_FOLDER} \
   && echo "Downloading......" \
   && echo "Download nginx" \
   && curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
@@ -145,18 +145,18 @@ RUN apk add --no-cache --virtual .libressl-deps libressl \
   && tar -zxf luajit.tar.gz \
   && cd luajit2-$VERSION_LUAJIT \
   && CFLAGS="$COMPILE_FLAGS" make all && make install \
-  && cd /usr/src/lua-resty-core-$VERSION_LUA_RUSTY_CORE \
+  && cd ${SOURCE_FOLDER}/lua-resty-core-$VERSION_LUA_RUSTY_CORE \
   && LUA_LIB_DIR=$LUA_RESTY_PATH CFLAGS="$COMPILE_FLAGS" make install \
-  && cd /usr/src/lua-resty-lrucache-$VERSION_RUSTY_LRU \
+  && cd ${SOURCE_FOLDER}/lua-resty-lrucache-$VERSION_RUSTY_LRU \
   && LUA_LIB_DIR=$LUA_RESTY_PATH CFLAGS="$COMPILE_FLAGS" make install \
   # && cd /usr/src/pcre2-$VERSION_PCRE \
   # && (./autogen.sh || ./configure) \
-  && cd /usr/src \
+  && cd ${SOURCE_FOLDER} \
 #  && tar -zxC /usr/src -f ngx_http_geoip2_module.tar.gz \
 #  && rm nginx.tar.gz ndk.tar.gz lua.tar.gz ngx_http_geoip2_module.tar.gz \ 
   && cd nginx-$NGINX_VERSION \
   && ./configure $CONFIG --with-debug \
-            --with-cc-opt="${COMPILE_FLAGS/-O3/}" \
+            --with-cc-opt="${COMPILE_FLAGS/-O3/} -Wno-error=implicit-function-declaration" \
             --with-pcre-opt="$COMPILE_FLAGS" \
             --with-ld-opt="-Wl,-O4,--sort-common,--gc-sections,--as-needed,-z,relro,-z,now" \
   && make -j$(getconf _NPROCESSORS_ONLN) \
@@ -167,7 +167,7 @@ RUN apk add --no-cache --virtual .libressl-deps libressl \
   && mv objs/ngx_http_perl_module.so objs/ngx_http_perl_module-debug.so \
 #  && mv objs/ngx_stream_geoip_module.so objs/ngx_stream_geoip_module-debug.so \
   && ./configure $CONFIG \
-            --with-cc-opt="$COMPILE_FLAGS"\
+            --with-cc-opt="$COMPILE_FLAGS -Wno-error=implicit-function-declaration"\
             --with-ld-opt="-Wl,-O4,--sort-common,--gc-sections,--as-needed,-z,relro,-z,now" \
             --with-pcre-opt="$COMPILE_FLAGS"\
   && make -j$(getconf _NPROCESSORS_ONLN) \
@@ -241,7 +241,7 @@ RUN echo @testing https://dl-cdn.alpinelinux.org/alpine/edge/testing >> /etc/apk
     linux-headers \
     augeas-dev \
     libmcrypt-dev \
-    libressl-dev \
+    openssl-dev \
     libpng-dev \
     libxslt-dev \
     python3-dev \

@@ -15,7 +15,8 @@ ENV php_conf=/etc/php/5.6/fpm/php-fpm.conf \
     BUILD_DEPS="autoconf g++ libc-dev make libtool libssl-dev file automake curl gnupg libxslt-dev libgd-dev libmaxminddb-dev libperl-dev xclip"
 
 ARG NGINX_VERSION=1.24.0
-ARG LUA_MODULE_VERSION=0.10.24
+ARG LIBRESSL_VER=3.6.2
+ARG LUA_MODULE_VERSION=0.10.25
 ARG DEVEL_KIT_MODULE_VERSION=0.3.2
 ARG VERSION_PCRE=8.45
 ARG PCRE_FOLDER=pcre-${VERSION_PCRE}
@@ -71,22 +72,22 @@ ARG CONFIG="\
     --with-file-aio \
     --with-http_v2_module \
     --add-module=$SOURCE_FOLDER/ngx_devel_kit-$DEVEL_KIT_MODULE_VERSION \
-    --add-module=/usr/src/lua-nginx-module-$LUA_MODULE_VERSION \
-    --with-zlib=/usr/src/zlib-$VERSION_ZLIB \
-    --with-pcre=/usr/src/$PCRE_FOLDER \
+    --add-module=${SOURCE_FOLDER}/lua-nginx-module-$LUA_MODULE_VERSION \
+    --with-zlib=${SOURCE_FOLDER}/zlib-$VERSION_ZLIB \
+    --with-pcre=${SOURCE_FOLDER}/$PCRE_FOLDER \
     --with-pcre-jit \
-  "
+"
 
 
 RUN apt update \
-  && apt-get install --no-install-recommends --no-install-suggests -q -y libssl3 openssl perl pax-utils \ 
+  && apt-get install --no-install-recommends --no-install-suggests -q -y libssl3 perl pax-utils \ 
   && GPG_KEYS=573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62 \
   && addgroup --system nginx \
   && adduser --system --home /var/cache/nginx --disabled-login nginx \ 
   && usermod -g nginx nginx \
   && apt-get install --no-install-recommends --no-install-suggests -q -y ${BUILD_DEPS} \
-  && mkdir -p /usr/src \
-  && cd /usr/src \
+  && mkdir -p ${SOURCE_FOLDER} \
+  && cd ${SOURCE_FOLDER} \
   && echo "Downloading......" \
   && echo "Download nginx" \
   && curl -fSL http://nginx.org/download/nginx-$NGINX_VERSION.tar.gz -o nginx.tar.gz \
@@ -104,7 +105,7 @@ RUN apt update \
   && echo "Download pcre" \
   && curl -fSL https://sourceforge.net/projects/pcre/files/pcre/${VERSION_PCRE}/$PCRE_FOLDER.tar.gz/download -o pcre.tar.gz \
   && echo "Download luajit2" \
-  && curl -fSL https://github.com/openresty/luajit2/archive/v$VERSION_LUAJIT.tar.gz -o luajit.tar.gz \
+  && curl -fSL https://github.com/openresty/luajit2/archive/v$VERSION_LUAJIT.tar.gz -o luajit.tar.gz \  
 #  && curl -fSL https://github.com/leev/ngx_http_geoip2_module/archive/$GEOIP2_MODULE_VERSION.tar.gz -o ngx_http_geoip2_module.tar.gz \
 #  && export GNUPGHOME="$(mktemp -d)" \
 #  && found=''; \
@@ -131,21 +132,21 @@ RUN apt update \
   && cd luajit2-$VERSION_LUAJIT \
   && echo "Building luajit2" \
   && CFLAGS="$COMPILE_FLAGS" make all && make install \
-  && cd /usr/src/lua-resty-core-$VERSION_LUA_RUSTY_CORE \
+  && cd ${SOURCE_FOLDER}/lua-resty-core-$VERSION_LUA_RUSTY_CORE \
   && echo "Building lua resty" \
   && LUA_LIB_DIR=${LUA_RESTY_PATH} CFLAGS="$COMPILE_FLAGS" make install \
-  && cd /usr/src/lua-resty-lrucache-$VERSION_RUSTY_LRU \
+  && cd ${SOURCE_FOLDER}/lua-resty-lrucache-$VERSION_RUSTY_LRU \
   && echo "Building lua resty lrucache" \
   && LUA_LIB_DIR=$(echo "$LUA_RESTY_PATH" | sed 's/\///') CFLAGS="$COMPILE_FLAGS" make install \
   # && cd /usr/src/pcre2-$VERSION_PCRE \
   # && (./autogen.sh || ./configure) \
-  && cd /usr/src \
+  && cd ${SOURCE_FOLDER} \
 #  && tar -zxC /usr/src -f ngx_http_geoip2_module.tar.gz \
 #  && rm nginx.tar.gz ndk.tar.gz lua.tar.gz ngx_http_geoip2_module.tar.gz \ 
   && cd nginx-$NGINX_VERSION \
   && echo "Building nginx" \
   && ./configure $CONFIG --with-debug \
-            --with-cc-opt="$(echo "$COMPILE_FLAGS" | sed 's/-O3//')" \
+            --with-cc-opt="$(echo "$COMPILE_FLAGS" | sed 's/-O3//') -Wno-error=implicit-function-declaration" \
             --with-pcre-opt="$COMPILE_FLAGS" \
             --with-ld-opt="-Wl,-O4,--sort-common,--gc-sections,--as-needed,-z,relro,-z,now" \
   && make -j$(getconf _NPROCESSORS_ONLN) \
@@ -156,7 +157,8 @@ RUN apt update \
   && mv objs/ngx_http_perl_module.so objs/ngx_http_perl_module-debug.so \
 #  && mv objs/ngx_stream_geoip_module.so objs/ngx_stream_geoip_module-debug.so \
   && ./configure $CONFIG \
-            --with-cc-opt="$COMPILE_FLAGS"\
+            --with-cc-opt="$COMPILE_FLAGS -Wno-error=implicit-function-declaration"\
+            --with-openssl-opt="${COMPILE_FLAGS}" \
             --with-ld-opt="-Wl,-O4,--sort-common,--gc-sections,--as-needed,-z,relro,-z,now" \
             --with-pcre-opt="$COMPILE_FLAGS"\
   && make -j$(getconf _NPROCESSORS_ONLN) \
