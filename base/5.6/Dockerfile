@@ -3,11 +3,11 @@ FROM debian:bookworm-slim
 LABEL maintainer="JPratama7 josepratama080@gmail.com"
 
 # Let the container know that there is no tty
-ENV DEBIAN_FRONTEND noninteractive
 ENV PHP_VER 5.6
-ENV php_conf /etc/php/${PHP_VER}/fpm/php.ini
-ENV fpm_conf /etc/php/${PHP_VER}/fpm/pool.d/www.conf
-ENV COMPOSER_VERSION 2.5.8
+ENV DEBIAN_FRONTEND=noninteractive \
+    php_conf=/etc/php/${PHP_VER}/fpm/php.ini \
+    fpm_conf=/etc/php/${PHP_VER}/fpm/pool.d/www.conf \
+    COMPOSER_VERSION=2.5.8
 
 ARG BUILD_DEPS='curl gcc make autoconf libc-dev zlib1g-dev pkg-config gnupg2 dirmngr wget'
 
@@ -39,6 +39,8 @@ RUN set -x \
             php${PHP_VER}-readline \
             php${PHP_VER}-mbstring \
             php${PHP_VER}-curl \
+            php${PHP_VER}-redis \
+            php${PHP_VER}-memcached \
             php${PHP_VER}-gd \
             php${PHP_VER}-imagick \
             php${PHP_VER}-mysql \
@@ -47,7 +49,6 @@ RUN set -x \
             php${PHP_VER}-intl \
             php${PHP_VER}-xml \
             php-pear \
-    && pecl -d php_suffix=${PHP_VER} install -o -f redis-4.3.0 memcached-2.2.0 \
     && mkdir -p /run/php \
     && echo "#!/bin/sh\nexit 0" > /usr/sbin/policy-rc.d \
     && sed -i -e "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/g" ${php_conf} \
@@ -63,15 +64,6 @@ RUN set -x \
     && sed -i -e "s/pm.max_spare_servers = 3/pm.max_spare_servers = 4/g" ${fpm_conf} \
     && sed -i -e "s/pm.max_requests = 500/pm.max_requests = 200/g" ${fpm_conf} \
     && sed -i -e "s/^;clear_env = no$/clear_env = no/" ${fpm_conf} \
-    && echo "extension=redis.so" > /etc/php/${PHP_VER}/mods-available/redis.ini \
-    && echo "extension=memcached.so" > /etc/php/${PHP_VER}/mods-available/memcached.ini \
-    && echo "extension=imagick.so" > /etc/php/${PHP_VER}/mods-available/imagick.ini \
-    && ln -sf /etc/php/${PHP_VER}/mods-available/redis.ini /etc/php/${PHP_VER}/fpm/conf.d/20-redis.ini \
-    && ln -sf /etc/php/${PHP_VER}/mods-available/redis.ini /etc/php/${PHP_VER}/cli/conf.d/20-redis.ini \
-    && ln -sf /etc/php/${PHP_VER}/mods-available/memcached.ini /etc/php/${PHP_VER}/fpm/conf.d/20-memcached.ini \
-    && ln -sf /etc/php/${PHP_VER}/mods-available/memcached.ini /etc/php/${PHP_VER}/cli/conf.d/20-memcached.ini \
-    && ln -sf /etc/php/${PHP_VER}/mods-available/imagick.ini /etc/php/${PHP_VER}/fpm/conf.d/20-imagick.ini \
-    && ln -sf /etc/php/${PHP_VER}/mods-available/imagick.ini /etc/php/${PHP_VER}/cli/conf.d/20-imagick.ini \
     # Install Composer
     && curl -o /tmp/composer-setup.php https://getcomposer.org/installer \
     && curl -o /tmp/composer-setup.sig https://composer.github.io/installer.sig \
@@ -80,15 +72,12 @@ RUN set -x \
     && rm -rf /tmp/composer-setup.php \
     && ln -s /usr/sbin/php-fpm${PHP_BASE} /usr/sbin/php-fpm  \
     && ln -s /usr/sbin/php-fpm${PHP_BASE} /usr/bin/php-fpm  \
+    # Start PHP-FPM 
     # Clean up
     && rm -rf /tmp/pear \
     && apt-get purge -y --auto-remove $BUILD_DEPS \
     && apt-get clean \
     && apt-get autoremove \
     && rm -rf /var/lib/apt/lists/*
-
-
-# Override nginx's default config
-EXPOSE 9000
 
 CMD ["php-fpm5.6"]

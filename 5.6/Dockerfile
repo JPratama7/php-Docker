@@ -15,7 +15,6 @@ ENV php_conf=/etc/php/5.6/fpm/php-fpm.conf \
     BUILD_DEPS="autoconf g++ libc-dev make libtool libssl-dev file automake curl gnupg libxslt-dev libgd-dev libmaxminddb-dev libperl-dev xclip"
 
 ARG NGINX_VERSION=1.24.0
-ARG LIBRESSL_VER=3.6.2
 ARG LUA_MODULE_VERSION=0.10.25
 ARG DEVEL_KIT_MODULE_VERSION=0.3.2
 ARG VERSION_PCRE=8.45
@@ -71,12 +70,11 @@ ARG CONFIG="\
     --with-compat \
     --with-file-aio \
     --with-http_v2_module \
-    --add-module=$SOURCE_FOLDER/ngx_devel_kit-$DEVEL_KIT_MODULE_VERSION \
-    --add-module=${SOURCE_FOLDER}/lua-nginx-module-$LUA_MODULE_VERSION \
+    --add-dynamic-module=$SOURCE_FOLDER/ngx_devel_kit-$DEVEL_KIT_MODULE_VERSION \
+    --add-dynamic-module=${SOURCE_FOLDER}/lua-nginx-module-$LUA_MODULE_VERSION \
     --with-zlib=${SOURCE_FOLDER}/zlib-$VERSION_ZLIB \
     --with-pcre=${SOURCE_FOLDER}/$PCRE_FOLDER \
-    --with-pcre-jit \
-"
+    --with-pcre-jit"
 
 
 RUN apt update \
@@ -150,15 +148,10 @@ RUN apt update \
             --with-pcre-opt="$COMPILE_FLAGS" \
             --with-ld-opt="-Wl,-O4,--sort-common,--gc-sections,--as-needed,-z,relro,-z,now" \
   && make -j$(getconf _NPROCESSORS_ONLN) \
-  && mv objs/nginx objs/nginx-debug \
-  && mv objs/ngx_http_xslt_filter_module.so objs/ngx_http_xslt_filter_module-debug.so \
-  && mv objs/ngx_http_image_filter_module.so objs/ngx_http_image_filter_module-debug.so \
-#  && mv objs/ngx_http_geoip_module.so objs/ngx_http_geoip_module-debug.so \
-  && mv objs/ngx_http_perl_module.so objs/ngx_http_perl_module-debug.so \
-#  && mv objs/ngx_stream_geoip_module.so objs/ngx_stream_geoip_module-debug.so \
+  && mv objs objs-debug \
+  && make clean \
   && ./configure $CONFIG \
             --with-cc-opt="$COMPILE_FLAGS -Wno-error=implicit-function-declaration"\
-            --with-openssl-opt="${COMPILE_FLAGS}" \
             --with-ld-opt="-Wl,-O4,--sort-common,--gc-sections,--as-needed,-z,relro,-z,now" \
             --with-pcre-opt="$COMPILE_FLAGS"\
   && make -j$(getconf _NPROCESSORS_ONLN) \
@@ -168,11 +161,11 @@ RUN apt update \
   && mkdir -p /usr/share/nginx/html/ \
   && install -m644 html/index.html /usr/share/nginx/html/ \
   && install -m644 html/50x.html /usr/share/nginx/html/ \
-  && install -m755 objs/nginx-debug /usr/sbin/nginx-debug \
-  && install -m755 objs/ngx_http_xslt_filter_module-debug.so /usr/lib/nginx/modules/ngx_http_xslt_filter_module-debug.so \
-  && install -m755 objs/ngx_http_image_filter_module-debug.so /usr/lib/nginx/modules/ngx_http_image_filter_module-debug.so \
+  && install -m755 objs-debug/nginx /usr/sbin/nginx-debug \
+  && install -m755 objs-debug/ngx_http_xslt_filter_module.so /usr/lib/nginx/modules/ngx_http_xslt_filter_module-debug.so \
+  && install -m755 objs-debug/ngx_http_image_filter_module.so /usr/lib/nginx/modules/ngx_http_image_filter_module-debug.so \
+  && install -m755 objs-debug/ngx_http_perl_module.so /usr/lib/nginx/modules/ngx_http_perl_module-debug.so \
 #  && install -m755 objs/ngx_http_geoip_module-debug.so /usr/lib/nginx/modules/ngx_http_geoip_module-debug.so \
-  && install -m755 objs/ngx_http_perl_module-debug.so /usr/lib/nginx/modules/ngx_http_perl_module-debug.so \
 #  && install -m755 objs/ngx_stream_geoip_module-debug.so /usr/lib/nginx/modules/ngx_stream_geoip_module-debug.so \
   && ln -s ../../usr/lib/nginx/modules /etc/nginx/modules \
   && strip /usr/sbin/nginx* \
@@ -191,7 +184,7 @@ RUN apt update \
     scanelf --needed --nobanner /usr/sbin/nginx /usr/lib/nginx/modules/*.so /tmp/envsubst \
       | awk '{ gsub(/,/, "\nso:", $2); print "so:" $2 }' \
       | sort -u \
-      | xargs -r apk info --installed \
+      | xargs -r dpkg -l --installed \
       | sort -u \
   )" \
   && apt-get install --no-install-recommends --no-install-suggests -q -y $runDeps \

@@ -163,7 +163,7 @@ RUN apk add --no-cache --virtual .openssl-deps openssl \
   && mv objs/nginx objs/nginx-debug \
   && mv objs/ngx_http_xslt_filter_module.so objs/ngx_http_xslt_filter_module-debug.so \
   && mv objs/ngx_http_image_filter_module.so objs/ngx_http_image_filter_module-debug.so \
-#  && mv objs/ngx_http_geoip_module.so objs/ngx_http_geoip_module-debug.so \
+#  && mv objs/ngx_http_geoip_module.so objs/ngx_http_geoip_module-debug.so \ 
   && mv objs/ngx_http_perl_module.so objs/ngx_http_perl_module-debug.so \
 #  && mv objs/ngx_stream_geoip_module.so objs/ngx_stream_geoip_module-debug.so \
   && ./configure $CONFIG \
