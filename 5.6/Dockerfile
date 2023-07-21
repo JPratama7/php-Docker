@@ -257,7 +257,8 @@ RUN sed -i \
 	    -e "s/;opcache.enable=0/opcache.enable=1/g" \
 	    -e "s/;opcache/opcache/g" \
       /etc/php/5.6/cli/php.ini \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -rf ${SOURCE_FOLDER}
 
 
 # Add Scripts
