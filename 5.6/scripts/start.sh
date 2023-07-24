@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Disable Strict Host checking for non interactive git clones
 
@@ -216,8 +216,8 @@ if [ ! -z "$PUID" ]; then
     PGID=${PUID}
   fi
   deluser nginx
-  addgroup -g ${PGID} nginx
-  adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx -u ${PUID} nginx
+addgroup --gid ${PGID} nginx
+adduser --disabled-password --no-create-home --system --home /var/cache/nginx --shell /sbin/nologin --gid ${PGID} --uid ${PUID} nginx
 else
   if [ -z "$SKIP_CHOWN" ]; then
     chown -Rf nginx:nginx /var/www/*
