@@ -218,10 +218,10 @@ if [ ! -z "$PUID" ]; then
   deluser nginx
   addgroup -g ${PGID} nginx
   adduser -D -S -h /var/cache/nginx -s /sbin/nologin -G nginx -u ${PUID} nginx
-else
-  if [ -z "$SKIP_CHOWN" ]; then
-    chown -Rf nginx.nginx /var/www/*
-  fi
+fi
+
+if [ -z "$SKIP_CHOWN" ]; then
+  chown -Rf nginx:nginx /var/www/*
 fi
 
 # Run custom scripts
